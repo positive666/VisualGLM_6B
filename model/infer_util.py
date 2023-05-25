@@ -9,7 +9,7 @@ from transformers import AutoTokenizer
 from sat.model.mixins import CachedAutoregressiveMixin
 from sat.quantization.kernels import quantize
 import hashlib
-from .visualglm import VisualGLMModel
+from VisualGLM_6B.visualglm import VisualGLMModel
 
 def get_infer_setting(gpu_device=0, quant=None):
     os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu_device)
