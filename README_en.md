@@ -94,6 +94,12 @@ After unzipping fewshot-data.zip, run the following command:
 bash finetune/finetune_visualglm.sh
 ```
 
+Currently we support three types of (parameter-efficient) fine-tuning:
+
+* LoRA: In the given example, we add rank=10 LoRA for layer 0 and layer 14 in ChatGLM. You can adjust `--layer_range` and `--lora_rank` to fit your application and data amount.
+* QLoRA: If your resource is limited, consider using `bash finetune/finetune_visualglm_qlora.sh`, which do 4-bit quantization for ChatGLM Linear layers, reducing the required GPU memory to 9.8 GB.
+* P-tuning: You can replace `--use_lora` to `--use_ptuning`, but not recommended, unless your application has a relatively fixed input and output template.
+
 After training, you can use the following command for inference:
 
 ```
@@ -102,7 +108,26 @@ python cli_demo.py --from_pretrained your_checkpoint_path --prompt_zh 这张图�
 
 Fine-tuning requires the installation of the deepspeed library, and currently this process only supports the Linux system. More examples and instructions for the Windows system will be completed in the near future.
 
-Fine-tuning requires the installation of the deepspeed library, and currently this process only supports the Linux system. More examples and instructions for the Windows system will be completed in the near future.
+If you want to merge LoRA weights into original weights, just call `merge_lora()`:
+
+```python
+from finetune_visualglm import FineTuneVisualGLMModel
+import argparse
+
+model, args = FineTuneVisualGLMModel.from_pretrained('checkpoints/finetune-visualglm-6b-05-19-07-36',
+        args=argparse.Namespace(
+        fp16=True,
+        skip_init=True,
+        use_gpu_initialization=True,
+        device='cuda',
+    ))
+model.get_mixin('lora').merge_lora()
+args.layer_range = []
+args.save = 'merge_lora'
+args.mode = 'inference'
+from sat.training.model_io import save_checkpoint
+save_checkpoint(1, model, None, None, args)
+```
 
 ## Deployment Tools
 

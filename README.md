@@ -80,7 +80,7 @@ print(response)
 response, history = model.chat(tokenizer, image_path, "这张图片可能是在什么场所拍摄的？", history=history)
 print(response)
 ```
-以上代码会由 `transformers` 自动下载模型实现和参数。完整的模型实现可以在 [Hugging Face Hub](https://huggingface.co/THUDM/visualglm-6b)。如果你从 Hugging Face Hub 上下载模型参数的速度较慢，可以从[这里](https://cloud.tsinghua.edu.cn/d/43ffb021ca5f4897b56a/)手动下载模型参数文件，并从本地加载模型。具体做法请参考[从本地加载模型](https://github.com/THUDM/ChatGLM-6B#%E4%BB%8E%E6%9C%AC%E5%9C%B0%E5%8A%A0%E8%BD%BD%E6%A8%A1%E5%9E%8B)。
+以上代码会由 `transformers` 自动下载模型实现和参数。完整的模型实现可以在 [Hugging Face Hub](https://huggingface.co/THUDM/visualglm-6b)。如果你从 Hugging Face Hub 上下载模型参数的速度较慢，可以从[这里](https://cloud.tsinghua.edu.cn/d/43ffb021ca5f4897b56a/)手动下载模型参数文件，并从本地加载模型。具体做法请参考[从本地加载模型](https://github.com/THUDM/ChatGLM-6B#%E4%BB%8E%E6%9C%AC%E5%9C%B0%E5%8A%A0%E8%BD%BD%E6%A8%A1%E5%9E%8B)。关于基于 transformers 库模型的量化、CPU推理、Mac MPS 后端加速等内容，请参考 [ChatGLM-6B 的低成本部署](https://github.com/THUDM/ChatGLM-6B#%E4%BD%8E%E6%88%90%E6%9C%AC%E9%83%A8%E7%BD%B2)。
 
 如果使用SwissArmyTransformer库调用模型，方法类似，可以使用环境变量`SAT_HOME`决定模型下载位置。在本仓库目录下：
 ```python
@@ -99,8 +99,6 @@ print(response)
 ```
 使用`sat`库也可以轻松进行进行参数高效微调。<!-- TODO 具体代码 -->
 
-请注意，`Huggingface`模型的实现位于[Huggingface的仓库](https://huggingface.co/THUDM/visualglm-6b)中，`sat`模型的实现包含于本仓库中。
-
 ## 模型微调
 
 多模态任务分布广、种类多，预训练往往不能面面俱到。
@@ -110,6 +108,12 @@ print(response)
 ```
 bash finetune/finetune_visualglm.sh
 ```
+
+目前支持三种方式的微调：
+
+* LoRA：样例中为ChatGLM模型的第0层和第14层加入了rank=10的LoRA微调，可以根据具体情景和数据量调整`--layer_range`和`--lora_rank`参数。
+* QLoRA：如果资源有限，可以考虑使用`bash finetune/finetune_visualglm_qlora.sh`，QLoRA将ChatGLM的线性层进行了4-bit量化，只需要9.8GB显存即可微调。
+* P-tuning：可以将`--use_lora`替换为`--use_ptuning`，不过不推荐使用，除非模型应用场景非常固定。
 
 训练好以后可以使用如下命令推理：
 
@@ -169,6 +173,27 @@ VisualGLM-6B：两张护照。
 ```
 
 </details>
+
+如果希望把LoRA部分的参数合并到原始的权重，可以调用`merge_lora()`，例如：
+
+```python
+from finetune_visualglm import FineTuneVisualGLMModel
+import argparse
+
+model, args = FineTuneVisualGLMModel.from_pretrained('checkpoints/finetune-visualglm-6b-05-19-07-36',
+        args=argparse.Namespace(
+        fp16=True,
+        skip_init=True,
+        use_gpu_initialization=True,
+        device='cuda',
+    ))
+model.get_mixin('lora').merge_lora()
+args.layer_range = []
+args.save = 'merge_lora'
+args.mode = 'inference'
+from sat.training.model_io import save_checkpoint
+save_checkpoint(1, model, None, None, args)
+```
 
 微调需要安装`deepspeed`库，目前本流程仅支持linux系统，更多的样例说明和Windows系统的流程说明将在近期完成。
 
