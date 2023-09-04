@@ -7,7 +7,7 @@
 •  📃 <a href="https://arxiv.org/abs/2105.13290" target="_blank">[CogView@NeurIPS 21]</a>  <a href="https://github.com/THUDM/CogView" target="_blank">[GitHub]</a> • 📃 <a href="https://arxiv.org/abs/2103.10360" target="_blank">[GLM@ACL 22]</a> <a href="https://github.com/THUDM/GLM" target="_blank">[GitHub]</a> <br>
 </p>
 <p align="center">
-    👋 加入我们的 <a href="https://join.slack.com/t/chatglm/shared_invite/zt-1th2q5u69-7tURzFuOPanmuHy9hsZnKA" target="_blank">Slack</a> 和 <a href="resources/WECHAT.md" target="_blank">WeChat</a>
+    👋 加入我们的 <a href="https://join.slack.com/t/chatglm/shared_invite/zt-1y7pqoloy-9b1g6T6JjA8J0KxvUjbwJw" target="_blank">Slack</a> 和 <a href="examples/WECHAT.md" target="_blank">WeChat</a>
 </p>
 <!-- <p align="center">
 🤖<a href="https://huggingface.co/spaces/THUDM/visualglm-6b" target="_blank">VisualGLM-6B在线演示网站</a>
@@ -52,6 +52,15 @@ VisualGLM-6B 可以进行图像的描述的相关知识的问答。
 ![样例](https://github.com/WangRongsheng/XrayGLM/raw/main/assets/images/xrayglm.png)
 </details>
 
+* [StarGLM](https://github.com/WangRongsheng/XrayGLM) 是基于Chat/visualGLM-6B在天文数据集上微调的项目，能回答变星光变曲线相关的信息。
+<details>
+<summary>点击查看样例</summary>
+
+![样例](https://github.com/Yu-Yang-Li/StarGLM/raw/main/example/example_4.png)
+
+</details>
+
+
 ## 使用
 
 ### 模型推理
@@ -66,7 +75,7 @@ pip install -i https://mirrors.aliyun.com/pypi/simple/ -r requirements.txt
 如果想绕过`deepspeed`安装，我们可以将命令改为
 ```
 pip install -i https://mirrors.aliyun.com/pypi/simple/ -r requirements_wo_ds.txt
-pip install -i https://mirrors.aliyun.com/pypi/simple/ --no-deps "SwissArmyTransformer>=0.3.6"
+pip install -i https://mirrors.aliyun.com/pypi/simple/ --no-deps "SwissArmyTransformer>=0.4.4"
 ```
 
 如果使用Huggingface transformers库调用模型（**也需要安装上述依赖包！**），可以通过如下代码（其中图像路径为本地路径）：
@@ -227,6 +236,11 @@ optional arguments:
 我们也提供了继承自`ChatGLM-6B`的打字机效果命令行工具，此工具使用Huggingface模型：
 ```shell
 python cli_demo_hf.py
+```
+
+我们也支持模型并行多卡部署：（需要更新最新版本的sat，如果之前下载了checkpoint，也需要手动删除后重新下载）
+```
+torchrun --nnode 1 --nproc-per-node 2 cli_demo_mp.py
 ```
 
 ### 网页版 Demo

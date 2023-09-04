@@ -6,12 +6,15 @@ import json
 from .blip2 import BLIP2
 
 from sat.resources.urls import MODEL_URLS
-MODEL_URLS['visualglm-6b'] = 'https://cloud.tsinghua.edu.cn/f/348b98dffcc940b6a09d/?dl=1'
+MODEL_URLS['visualglm-6b'] = 'r2://visualglm-6b.zip'
 
 class ImageMixin(BaseMixin):
     def __init__(self, args):
         super().__init__()
         self.args = deepcopy(args)
+        if hasattr(args, 'model_parallel_size'):
+            args.eva_args['model_parallel_size'] = args.model_parallel_size
+            args.qformer_args['model_parallel_size'] = args.model_parallel_size
         self.model = BLIP2(args.eva_args, args.qformer_args)
 
     def word_embedding_forward(self, input_ids, output_cross_layer, **kw_args):
